@@ -1,5 +1,16 @@
 import pygame
 
+class Block(pygame.sprite.Sprite):
+    """ Represents a single block of a tetromino. """
+    def __init__(self, x, y, img):
+        super().__init__()
+
+        self.image = pygame.image.load(img).convert()
+        self.rect = self.image.get_rect()
+        self.rect.x = x
+        self.rect.y = y
+        
+
 pygame.init()
 
 SCREEN_WIDTH = 800
