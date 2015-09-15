@@ -20,6 +20,42 @@ BLOCK_SPRITES = ["block_red.png", "block_orange.png", "block_yellow.png",
                  "block_green.png", "block_cyan.png", "block_blue.png",
                  "block_purple.png"]
 
+class Grid:
+    """ The Tetris grid containing all the blocks. """
+    def __init__(self):
+        """ Grid consists of 20 rows, but we'll keep 4 extra for blocks to go
+        offscreen when the player loses. """
+        self.x = GRID_X
+        self.y = GRID_Y
+        self.width = GRID_WIDTH
+        self.height = GRID_HEIGHT
+        self.grid = [[None] * 10] * 24
+
+    def grid2pix(self, x, y):
+        """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
+        if (x < 0 or x > 9 or y < 0 or y > 23):
+            try:
+                raise IndexError
+            except IndexError as inst:
+                print("""x index must be between 0 and 9, y index must be
+                      between 4 and 23. (%d, %d) not valid.""" % (x, y))
+        pix_x = self.x + MARGIN + (x * BLOCK_WIDTH)
+        pix_y = self.y + MARGIN + ((y - 4) * BLOCK_HEIGHT)
+                      
+    def pix2grid(self, x, y):
+        """ Converts (x, y) pixel coordinates to (x, y) coordinates on the
+        grid. """
+        if (x < self.x + MARGIN or x > self.x + self.width - MARGIN or
+            y < self.y + MARGIN or y > self.y + self.height - MARGIN):
+            try:
+                raise Exception("Pixels out of bounds:", x, y)
+            except Exception as inst:
+                print(inst)
+        grid_x = (x - (self.x + MARGIN)) // BLOCK_WIDTH
+        grid_y = ((y - (self.y + MARGIN)) // BLOCK_HEIGHT) + 4
+        return grid_x, grid_y
+    
+
 class Block(pygame.sprite.Sprite):
     """ Represents a single block of a tetromino. """
     def __init__(self, x, y, img):
@@ -41,20 +77,30 @@ class Block(pygame.sprite.Sprite):
 
 
 class Tetromino:
-    """ Parent class of the tetromino - a group of 4 blocks. """
+    """ Parent class of the tetromino - a group of 4 Blocks. """
     def __init__(self):
         self.blocks = []
-        
+        self.rotations = []
 
+    def rotate_cw(self):
+        pass
+
+    def rotate_ccw(self):
+        pass
+
+    
 pygame.init()
 
 screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
 pygame.display.set_caption("Tetris")
 
+"""
 # Grid consists of 20 rows, but we'll keep 4 extra for blocks to go
 # offscreen when the player loses
 grid = [[0] * 10] * 24
+"""
+grid = Grid()
 
 block_list = pygame.sprite.Group()
 
@@ -69,6 +115,13 @@ while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
+        """
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            pos = pygame.mouse.get_pos()
+            x, y = grid.pix2grid(pos[0], pos[1])
+            print("Pixels: (%d, %d)\nCoordinates: (%d, %d)" % (pos[0], pos[1],
+                  x, y))
+        """
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT] and falling_block.rect.x > GRID_X + MARGIN:
@@ -93,6 +146,6 @@ while not done:
 
     pygame.display.flip()
 
-    clock.tick(30)
+    clock.tick(15)
 
 pygame.quit()
