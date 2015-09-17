@@ -29,7 +29,7 @@ class Grid:
         self.y = GRID_Y
         self.width = GRID_WIDTH
         self.height = GRID_HEIGHT
-        self.grid = [[None] * 10] * 24
+        self.grid = [[None for i in range(10)] for j in range(24)] 
 
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
@@ -41,6 +41,7 @@ class Grid:
                       between 4 and 23. (%d, %d) not valid.""" % (x, y))
         pix_x = self.x + MARGIN + (x * BLOCK_WIDTH)
         pix_y = self.y + MARGIN + ((y - 4) * BLOCK_HEIGHT)
+        return pix_x, pix_y
                       
     def pix2grid(self, x, y):
         """ Converts (x, y) pixel coordinates to (x, y) coordinates on the
@@ -58,23 +59,30 @@ class Grid:
 
 class Block(pygame.sprite.Sprite):
     """ Represents a single block of a tetromino. """
-    def __init__(self, x, y, img):
+    def __init__(self, grid, x, y, img):
         super().__init__()
 
         self.falling = True
 
+        self.grid = grid
+        self.x = x
+        self.y = y
+        self.grid.grid[y][x] = 1
         self.image = pygame.image.load(img).convert()
         self.rect = self.image.get_rect()
-        self.rect.x = x
-        self.rect.y = y
+        self.rect.x, self.rect.y = self.grid.grid2pix(x, y)
 
     def update(self):
         if self.falling:
-            self.rect.y += BLOCK_HEIGHT
-            if self.rect.y > GRID_Y + GRID_HEIGHT - MARGIN - BLOCK_HEIGHT:
-                self.rect.y = GRID_Y + GRID_HEIGHT - MARGIN - BLOCK_HEIGHT
+            if self.y >= 23 or self.grid.grid[self.y + 1][self.x]:
                 self.falling = False
-
+                self.rect.x, self.rect.y = self.grid.grid2pix(self.x, self.y)
+            else:
+                self.grid.grid[self.y][self.x] = None
+                self.y += 1
+                self.grid.grid[self.y][self.x] = self
+                self.rect.x, self.rect.y = self.grid.grid2pix(self.x, self.y)
+            
 
 class Tetromino:
     """ Parent class of the tetromino - a group of 4 Blocks. """
@@ -88,6 +96,69 @@ class Tetromino:
     def rotate_ccw(self):
         pass
 
+
+class S_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[0]),
+                       Block(grid, x+1, y, BLOCK_SPRITES[0]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[0]),
+                       Block(grid, x-1, y+1, BLOCK_SPRITES[0])]
+
+
+class J_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[1]),
+                       Block(grid, x-1, y, BLOCK_SPRITES[1]),
+                       Block(grid, x-2, y, BLOCK_SPRITES[1]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[1])]
+
+
+class O_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[2]),
+                       Block(grid, x+1, y, BLOCK_SPRITES[2]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[2]),
+                       Block(grid, x+1, y+1, BLOCK_SPRITES[2])]
+
+
+class Z_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[3]),
+                       Block(grid, x-1, y, BLOCK_SPRITES[3]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[3]),
+                       Block(grid, x+1, y+1, BLOCK_SPRITES[3])]
+
+
+class I_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[4]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[4]),
+                       Block(grid, x, y+2, BLOCK_SPRITES[4]),
+                       Block(grid, x, y+3, BLOCK_SPRITES[4])]
+
+
+class L_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[5]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[5]),
+                       Block(grid, x+1, y, BLOCK_SPRITES[5]),
+                       Block(grid, x+2, y, BLOCK_SPRITES[5])]
+
+
+class T_Block(Tetromino):
+
+    def __init__(self, grid, x, y):
+        self.blocks = [Block(grid, x, y, BLOCK_SPRITES[6]),
+                       Block(grid, x+1, y, BLOCK_SPRITES[6]),
+                       Block(grid, x-1, y, BLOCK_SPRITES[6]),
+                       Block(grid, x, y+1, BLOCK_SPRITES[6])]
+                       
     
 pygame.init()
 
@@ -95,11 +166,6 @@ screen = pygame.display.set_mode([SCREEN_WIDTH, SCREEN_HEIGHT])
 
 pygame.display.set_caption("Tetris")
 
-"""
-# Grid consists of 20 rows, but we'll keep 4 extra for blocks to go
-# offscreen when the player loses
-grid = [[0] * 10] * 24
-"""
 grid = Grid()
 
 block_list = pygame.sprite.Group()
@@ -107,7 +173,7 @@ block_list = pygame.sprite.Group()
 clock = pygame.time.Clock()
 done = False
 
-falling_block = Block(375, 50, BLOCK_SPRITES[random.randrange(7)])
+falling_block = Block(grid, 4, 4, BLOCK_SPRITES[random.randrange(7)])
 block_list.add(falling_block)
 
 while not done:
@@ -115,25 +181,24 @@ while not done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             done = True
-        """
-        elif event.type == pygame.MOUSEBUTTONDOWN:
-            pos = pygame.mouse.get_pos()
-            x, y = grid.pix2grid(pos[0], pos[1])
-            print("Pixels: (%d, %d)\nCoordinates: (%d, %d)" % (pos[0], pos[1],
-                  x, y))
-        """
 
     keys = pygame.key.get_pressed()
-    if keys[pygame.K_LEFT] and falling_block.rect.x > GRID_X + MARGIN:
-        falling_block.rect.x -= BLOCK_WIDTH
-    elif keys[pygame.K_RIGHT] and falling_block.rect.x < GRID_X + GRID_WIDTH - MARGIN - BLOCK_WIDTH:
-        falling_block.rect.x += BLOCK_WIDTH
-
-    if not falling_block.falling:
-        falling_block = Block(375, 50, BLOCK_SPRITES[random.randrange(7)])
-        block_list.add(falling_block)
+    if (keys[pygame.K_LEFT] and falling_block.x > 0 and
+        grid.grid[falling_block.y][falling_block.x-1] == None):
+        grid.grid[falling_block.y][falling_block.x] = None
+        falling_block.x -= 1
+        grid.grid[falling_block.y][falling_block.x] = falling_block
+    elif (keys[pygame.K_RIGHT] and falling_block.x < 9 and
+          grid.grid[falling_block.y][falling_block.x+1] == None):
+        grid.grid[falling_block.y][falling_block.x] = None
+        falling_block.x += 1
+        grid.grid[falling_block.y][falling_block.x] = falling_block
         
     block_list.update()
+
+    if not falling_block.falling:
+        falling_block = Block(grid, 4, 4, BLOCK_SPRITES[random.randrange(7)])
+        block_list.add(falling_block)
     
 
     # Draw the screen
@@ -146,6 +211,6 @@ while not done:
 
     pygame.display.flip()
 
-    clock.tick(15)
+    clock.tick(10)
 
 pygame.quit()
