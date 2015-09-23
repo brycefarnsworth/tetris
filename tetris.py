@@ -34,6 +34,12 @@ class Grid:
         self.screen = screen
         self.falling_block = None
 
+    def get_falling_block(self):
+        y = self.falling_block[0]
+        x = self.falling_block[1]
+        block_image = self.falling_block[2]
+        return y, x, block_image
+
     def gen_block(self):
         """ Generates a new block on the grid. """
         new_block = random.randrange(7)
@@ -43,9 +49,7 @@ class Grid:
     def update(self):
         """ Moves the block down, if possible, otherwise generates a new
         block. """
-        y = self.falling_block[0]
-        x = self.falling_block[1]
-        block_image = self.falling_block[2]
+        y, x, block_image = self.get_falling_block()
         if y == 23 or self.grid[y+1][x][0]:
             self.grid[y][x] = (1, block_image)
             self.gen_block()
@@ -56,9 +60,7 @@ class Grid:
 
     def move_left(self):
         """ Move block left, if possible. """
-        y = self.falling_block[0]
-        x = self.falling_block[1]
-        block_image = self.falling_block[2]
+        y, x, block_image = self.get_falling_block()
         if x > 0 and not self.grid[y][x-1][0]:
             self.grid[y][x] = (0, None)
             self.grid[y][x-1] = (-1, block_image)
@@ -66,13 +68,29 @@ class Grid:
 
     def move_right(self):
         """ Move block left, if possible. """
-        y = self.falling_block[0]
-        x = self.falling_block[1]
-        block_image = self.falling_block[2]
+        y, x, block_image = self.get_falling_block()
         if x < 9 and not self.grid[y][x+1][0]:
             self.grid[y][x] = (0, None)
             self.grid[y][x+1] = (-1, block_image)
             self.falling_block[1] = x + 1
+
+    def rotate_cw(self):
+        pass
+
+    def rotate_ccw(self):
+        pass
+
+    def drop(self):
+        y, x, block_image = self.get_falling_block()
+        for i in range(y+1, 24):
+            if self.grid[i][x][0]:
+                self.grid[y][x] = (0, None)
+                self.grid[i-1][x] = (1, block_image)
+                self.gen_block()
+                return
+        self.grid[y][x] = (0, None)
+        self.grid[23][x] = (1, block_image)
+        self.gen_block()
 
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
@@ -134,6 +152,10 @@ while not done:
         grid.move_left()
     if keys[pygame.K_RIGHT]:
         grid.move_right()
+    if keys[pygame.K_DOWN]:
+        grid.update()
+    if keys[pygame.K_SPACE]:
+        grid.drop()
 
     
     grid.update()
