@@ -17,9 +17,11 @@ GRID_WIDTH = 260
 GRID_HEIGHT = 510
 
 # In order: Z, L, O, S, I, J, T
+BLOCK_TYPES = ['Z', 'L', 'O', 'S', 'I', 'J', 'T']
 BLOCK_SPRITES = ["block_red.png", "block_orange.png", "block_yellow.png",
                  "block_green.png", "block_cyan.png", "block_blue.png",
                  "block_purple.png"]
+
 
 class Grid:
     """ The Tetris grid containing all the blocks. """
@@ -32,47 +34,102 @@ class Grid:
         self.height = GRID_HEIGHT
         self.grid = [[(0, None) for i in range(10)] for j in range(24)]
         self.screen = screen
-        self.falling_block = None
+        self.center_block = None
+        self.falling_blocks = [None, None, None, None]
 
-    def get_falling_block(self):
-        y = self.falling_block[0]
-        x = self.falling_block[1]
-        block_image = self.falling_block[2]
-        return y, x, block_image
+    def get_center_block(self):
+        return self.grid[self.center_block[0]][self.center_block[1]]
 
     def gen_block(self):
         """ Generates a new block on the grid. """
         new_block = random.randrange(7)
-        self.falling_block = [4, 4, BLOCK_SPRITES[new_block]]
-        self.grid[4][4] = (-1, BLOCK_SPRITES[new_block])
+        self.center_block = [4, 4]
+        if new_block == 0:
+            # Z Block
+            self.falling_blocks = [[4, 4], [4, 5], [3, 4], [3, 3]]
+        elif new_block == 1:
+            # L Block
+            self.falling_blocks = [[4, 4], [4, 3], [4, 5], [3, 5]]
+        elif new_block == 2:
+            # O Block
+            self.falling_blocks = [[4, 4], [4, 5], [3, 4], [3, 5]]
+        elif new_block == 3:
+            # S Block
+            self.falling_blocks = [[4, 4], [4, 3], [3, 4], [3, 5]]
+        elif new_block == 4:
+            # I Block
+            self.falling_blocks = [[4, 4], [4, 3], [4, 5], [4, 6]]
+        elif new_block == 5:
+            # J Block
+            self.falling_blocks = [[4, 4], [4, 5], [4, 3], [3, 3]]
+        elif new_block == 6:
+            # T Block
+            self.falling_blocks = [[4, 4], [4, 3], [4, 5], [3, 4]]
+        for block in self.falling_blocks:
+            self.grid[block[0]][block[1]] = [-1, BLOCK_SPRITES[new_block]]
 
     def update(self):
         """ Moves the block down, if possible, otherwise generates a new
         block. """
-        y, x, block_image = self.get_falling_block()
-        if y == 23 or self.grid[y+1][x][0]:
-            self.grid[y][x] = (1, block_image)
+        stop = False
+        for block in self.falling_blocks:
+            # Check to see if block can go down
+            if block[0] == 23 or self.grid[block[0]+1][block[1]][0] == 1:
+                stop = True
+        if stop:
+            for block in self.falling_blocks:
+                self.grid[block[0]][block[1]][0] = 1
             self.gen_block()
         else:
-            self.grid[y][x] = (0, None)
-            self.grid[y+1][x] = (-1, block_image)
-            self.falling_block[0] = y + 1
+            center = self.get_center_block()
+            block_image = center[1]
+            for block in self.falling_blocks:
+                # Remove blocks from grid
+                self.grid[block[0]][block[1]] = [0, None]
+            for block in self.falling_blocks:
+                # Replace them one space lower on the grid
+                block[0] += 1
+                self.grid[block[0]][block[1]] = [-1, block_image]
+            # Move center
+            self.center_block = self.falling_blocks[0]
 
     def move_left(self):
         """ Move block left, if possible. """
-        y, x, block_image = self.get_falling_block()
-        if x > 0 and not self.grid[y][x-1][0]:
-            self.grid[y][x] = (0, None)
-            self.grid[y][x-1] = (-1, block_image)
-            self.falling_block[1] = x - 1
+        stop = False
+        for block in self.falling_blocks:
+            # Check to see if block can go left
+            if block[1] == 0 or self.grid[block[0]][block[1]-1][0] == 1:
+                stop = True
+        if not stop:
+            center = self.get_center_block()
+            block_image = center[1]
+            for block in self.falling_blocks:
+                # Remove blocks from grid
+                self.grid[block[0]][block[1]] = [0, None]
+            for block in self.falling_blocks:
+                # Replace blocks one space to the left on the grid
+                block[1] -= 1
+                self.grid[block[0]][block[1]] = [-1, block_image]
+            self.center_block = self.falling_blocks[0]
 
     def move_right(self):
         """ Move block left, if possible. """
-        y, x, block_image = self.get_falling_block()
-        if x < 9 and not self.grid[y][x+1][0]:
-            self.grid[y][x] = (0, None)
-            self.grid[y][x+1] = (-1, block_image)
-            self.falling_block[1] = x + 1
+        stop = False
+        for block in self.falling_blocks:
+            # Check to see if block can go right
+            if block[1] == 9 or self.grid[block[0]][block[1]+1][0] == 1:
+                stop = True
+        if not stop:
+            center = self.get_center_block()
+            block_image = center[1]
+            for block in self.falling_blocks:
+                # Remove blocks from grid
+                self.grid[block[0]][block[1]] = [0, None]
+            for block in self.falling_blocks:
+                # Replace blocks one space to the right on the grid
+                block[1] += 1
+                self.grid[block[0]][block[1]] = [-1, block_image]
+            self.center_block = self.falling_blocks[0]
 
     def rotate_cw(self):
         pass
@@ -81,16 +138,35 @@ class Grid:
         pass
 
     def drop(self):
-        y, x, block_image = self.get_falling_block()
-        for i in range(y+1, 24):
-            if self.grid[i][x][0]:
-                self.grid[y][x] = (0, None)
-                self.grid[i-1][x] = (1, block_image)
-                self.gen_block()
-                return
-        self.grid[y][x] = (0, None)
-        self.grid[23][x] = (1, block_image)
-        self.gen_block()
+        i = 0
+        stop = False
+        while not stop:
+            i += 1
+            for block in self.falling_blocks:
+                if (block[0] + i == 24 or
+                    self.grid[block[0]+i][block[1]][0] == 1):
+                    stop = True
+        center = self.get_center_block()
+        block_image = center[1]
+        for block in self.falling_blocks:
+            # Remove blocks from grid
+            self.grid[block[0]][block[1]] = [0, None]
+        for block in self.falling_blocks:
+            # Replace them to the drop position
+            block[0] += i-1
+            self.grid[block[0]][block[1]] = [-1, block_image]
+        # Move center
+        self.center_block = self.falling_blocks[0]
+        # y, x, block_image = self.get_falling_block()
+        # for i in range(y+1, 24):
+        #     if self.grid[i][x][0]:
+        #         self.grid[y][x] = (0, None)
+        #         self.grid[i-1][x] = (1, block_image)
+        #         self.gen_block()
+        #         return
+        # self.grid[y][x] = (0, None)
+        # self.grid[23][x] = (1, block_image)
+        # self.gen_block()
 
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
