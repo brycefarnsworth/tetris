@@ -157,17 +157,7 @@ class Grid:
             self.grid[block[0]][block[1]] = [-1, block_image]
         # Move center
         self.center_block = self.falling_blocks[0]
-        # y, x, block_image = self.get_falling_block()
-        # for i in range(y+1, 24):
-        #     if self.grid[i][x][0]:
-        #         self.grid[y][x] = (0, None)
-        #         self.grid[i-1][x] = (1, block_image)
-        #         self.gen_block()
-        #         return
-        # self.grid[y][x] = (0, None)
-        # self.grid[23][x] = (1, block_image)
-        # self.gen_block()
-
+        
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
         if (x < 0 or x > 9 or y < 0 or y > 23):
