@@ -132,10 +132,114 @@ class Grid:
             self.center_block = self.falling_blocks[0]
 
     def rotate_cw(self):
-        pass
+        """ Rotate clockwise, if possible. """
+        center = self.get_center_block()
+        block_image = center[1]
+        if block_image == "block_yellow.png":
+            # O Block does not need to rotate
+            return
+        from_center = []
+        for block in self.falling_blocks:
+            # Find where each block is relative to the center block
+            from_center_y = block[0] - self.center_block[0]
+            from_center_x = block[1] - self.center_block[1]
+            from_center.append([from_center_y, from_center_x])
+        for i in range(len(from_center)):
+            # Rotate positions around center block
+            new_pos_y = 0
+            new_pos_x = 0
+            if from_center[i][0] > 0:
+                # Block is below center - rotate to the left
+                new_pos_x = -from_center[i][0]
+            elif from_center[i][0] < 0:
+                # Block is above center - rotate to the right
+                new_pos_x = -from_center[i][0]
+            else:
+                # Block is in same row - rotate to same column
+                new_pos_x = 0
+            if from_center[i][1] > 0:
+                # Block is right of center - rotate below
+                new_pos_y = from_center[i][1]
+            elif from_center[i][1] < 0:
+                # Block is left of center - rotate above
+                new_pos_y = from_center[i][1]
+            else:
+                # Block is in same column - rotate to same row
+                new_pos_y = 0
+            from_center[i] = [new_pos_y, new_pos_x]
+        stop = False
+        for new_pos in from_center:
+            # Check each of the new block positions on the grid
+            new_pos_y = self.center_block[0] + new_pos[0]
+            new_pos_x = self.center_block[1] + new_pos[1]
+            if (new_pos_y < 0 or new_pos_y > 23 or new_pos_x < 0 or
+                new_pos_x > 9 or self.grid[new_pos_y][new_pos_x][0] == 1):
+                stop = True
+        if not stop:
+            for block in self.falling_blocks:
+                # Remove blocks from grid
+                self.grid[block[0]][block[1]] = [0, None]
+            for i in range(len(self.falling_blocks)):
+                # Replace blocks
+                block = self.falling_blocks[i]
+                block[0] = self.center_block[0] + from_center[i][0]
+                block[1] = self.center_block[1] + from_center[i][1]
+                self.grid[block[0]][block[1]] = [-1, block_image]
 
     def rotate_ccw(self):
-        pass
+        """ Rotate counter-clockwise, if possible. """
+        center = self.get_center_block()
+        block_image = center[1]
+        if block_image == "block_yellow.png":
+            # O Block does not need to rotate
+            return
+        from_center = []
+        for block in self.falling_blocks:
+            # Find where each block is relative to the center block
+            from_center_y = block[0] - self.center_block[0]
+            from_center_x = block[1] - self.center_block[1]
+            from_center.append([from_center_y, from_center_x])
+        for i in range(len(from_center)):
+            # Rotate positions around center block
+            new_pos_y = 0
+            new_pos_x = 0
+            if from_center[i][0] > 0:
+                # Block is below center - rotate to the right
+                new_pos_x = from_center[i][0]
+            elif from_center[i][0] < 0:
+                # Block is above center - rotate to the left
+                new_pos_x = from_center[i][0]
+            else:
+                # Block is in same row - rotate to same column
+                new_pos_x = 0
+            if from_center[i][1] > 0:
+                # Block is right of center - rotate above
+                new_pos_y = -from_center[i][1]
+            elif from_center[i][1] < 0:
+                # Block is left of center - rotate below
+                new_pos_y = -from_center[i][1]
+            else:
+                # Block is in same column - rotate to same row
+                new_pos_y = 0
+            from_center[i] = [new_pos_y, new_pos_x]
+        stop = False
+        for new_pos in from_center:
+            # Check each of the new block positions on the grid
+            new_pos_y = self.center_block[0] + new_pos[0]
+            new_pos_x = self.center_block[1] + new_pos[1]
+            if (new_pos_y < 0 or new_pos_y > 23 or new_pos_x < 0 or
+                new_pos_x > 9 or self.grid[new_pos_y][new_pos_x][0] == 1):
+                stop = True
+        if not stop:
+            for block in self.falling_blocks:
+                # Remove blocks from grid
+                self.grid[block[0]][block[1]] = [0, None]
+            for i in range(len(self.falling_blocks)):
+                # Replace blocks
+                block = self.falling_blocks[i]
+                block[0] = self.center_block[0] + from_center[i][0]
+                block[1] = self.center_block[1] + from_center[i][1]
+                self.grid[block[0]][block[1]] = [-1, block_image]
 
     def drop(self):
         i = 0
@@ -157,6 +261,7 @@ class Grid:
             self.grid[block[0]][block[1]] = [-1, block_image]
         # Move center
         self.center_block = self.falling_blocks[0]
+        self.update()
         
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
@@ -222,9 +327,13 @@ while not done:
         grid.update()
     if keys[pygame.K_SPACE]:
         grid.drop()
+    if keys[pygame.K_z]:
+        grid.rotate_ccw()
+    if keys[pygame.K_x]:
+        grid.rotate_cw()
 
     
-    grid.update()
+    # grid.update()
 
     # Draw the screen
     screen.fill(GRAY)
