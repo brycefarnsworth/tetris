@@ -28,6 +28,7 @@ class Grid:
     def __init__(self, screen):
         """ Grid consists of 20 rows, but we'll keep 4 extra for blocks to go
         offscreen when the player loses. """
+        self.done = False
         self.x = GRID_X
         self.y = GRID_Y
         self.width = GRID_WIDTH
@@ -65,8 +66,15 @@ class Grid:
         elif new_block == 6:
             # T Block
             self.falling_blocks = [[4, 4], [4, 3], [4, 5], [3, 4]]
+        stop = False
         for block in self.falling_blocks:
-            self.grid[block[0]][block[1]] = [-1, BLOCK_SPRITES[new_block]]
+            if self.grid[block[0]][block[1]][0] == 1:
+                stop = True
+        if stop:
+            self.done = True
+        else:
+            for block in self.falling_blocks:
+                self.grid[block[0]][block[1]] = [-1, BLOCK_SPRITES[new_block]]
 
     def update(self):
         """ Moves the block down, if possible, otherwise generates a new
@@ -79,6 +87,15 @@ class Grid:
         if stop:
             for block in self.falling_blocks:
                 self.grid[block[0]][block[1]][0] = 1
+            # Check for completed rows
+            for i in range(23, 3, -1):
+                complete = True
+                while complete:
+                    for j in range(0, 10):
+                        if not self.grid[i][j][0]:
+                            complete = False
+                    if complete:
+                        self.clear_line(i)
             self.gen_block()
         else:
             center = self.get_center_block()
@@ -320,6 +337,12 @@ class Grid:
         # Move center
         self.center_block = self.falling_blocks[0]
         self.update()
+
+    def clear_line(self, line):
+        """ Clear the numbered line and move all blocks above it down. """
+        for i in range(line, 3, -1):
+            for j in range(0, 10):
+                self.grid[i][j] = self.grid[i - 1][j]
         
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
@@ -368,13 +391,12 @@ grid = Grid(screen)
 grid.gen_block()
 
 clock = pygame.time.Clock()
-done = False
 
-while not done:
+while not grid.done:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            done = True
+            grid.done = True
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
