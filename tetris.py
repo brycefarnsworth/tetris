@@ -167,6 +167,32 @@ class Grid:
                 # Block is in same column - rotate to same row
                 new_pos_y = 0
             from_center[i] = [new_pos_y, new_pos_x]
+        if block_image == "block_cyan.png":
+            # Make I Block follow SRS
+            count_x = 0
+            count_y = 0
+            for pos in from_center:
+                if pos[0] > 0:
+                    count_y += 1
+                elif pos[0] < 0:
+                    count_y -= 1
+                if pos[1] > 0:
+                    count_x += 1
+                elif pos[1] < 0:
+                    count_x -= 1
+            current_center = self.center_block
+            if count_x > 0:
+                self.center_block = [current_center[0] - 1,
+                                     current_center[1]]
+            elif count_x < 0:
+                self.center_block = [current_center[0] + 1,
+                                     current_center[1]]
+            elif count_y > 0:
+                self.center_block = [current_center[0],
+                                     current_center[1] + 1]
+            elif count_y < 0:
+                self.center_block = [current_center[0],
+                                     current_center[1] - 1]
         stop = False
         for new_pos in from_center:
             # Check each of the new block positions on the grid
@@ -185,6 +211,9 @@ class Grid:
                 block[0] = self.center_block[0] + from_center[i][0]
                 block[1] = self.center_block[1] + from_center[i][1]
                 self.grid[block[0]][block[1]] = [-1, block_image]
+        else:
+            if block_image == "block_cyan.png":
+                self.center_block = current_center
 
     def rotate_ccw(self):
         """ Rotate counter-clockwise, if possible. """
@@ -222,6 +251,32 @@ class Grid:
                 # Block is in same column - rotate to same row
                 new_pos_y = 0
             from_center[i] = [new_pos_y, new_pos_x]
+        if block_image == "block_cyan.png":
+            # Make I Block follow SRS
+            count_x = 0
+            count_y = 0
+            for pos in from_center:
+                if pos[0] > 0:
+                    count_y += 1
+                elif pos[0] < 0:
+                    count_y -= 1
+                if pos[1] > 0:
+                    count_x += 1
+                elif pos[1] < 0:
+                    count_x -= 1
+            current_center = self.center_block
+            if count_x > 0:
+                self.center_block = [current_center[0],
+                                     current_center[1] - 1]
+            elif count_x < 0:
+                self.center_block = [current_center[0],
+                                     current_center[1] + 1]
+            elif count_y > 0:
+                self.center_block = [current_center[0] - 1,
+                                     current_center[1]]
+            elif count_y < 0:
+                self.center_block = [current_center[0] + 1,
+                                     current_center[1]]
         stop = False
         for new_pos in from_center:
             # Check each of the new block positions on the grid
@@ -240,6 +295,9 @@ class Grid:
                 block[0] = self.center_block[0] + from_center[i][0]
                 block[1] = self.center_block[1] + from_center[i][1]
                 self.grid[block[0]][block[1]] = [-1, block_image]
+        else:
+            if block_image == "block_cyan.png":
+                self.center_block = current_center
 
     def drop(self):
         i = 0
@@ -333,7 +391,7 @@ while not done:
         grid.rotate_cw()
 
     
-    # grid.update()
+    grid.update()
 
     # Draw the screen
     screen.fill(GRAY)
@@ -345,7 +403,6 @@ while not done:
 
     pygame.display.flip()
     
-
     clock.tick(10)
 
 pygame.quit()
