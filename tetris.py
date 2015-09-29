@@ -3,6 +3,7 @@ import random
 
 BLACK = (0, 0, 0)
 GRAY = (140, 140, 140)
+WHITE = (255, 255, 255)
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
@@ -34,6 +35,7 @@ class Grid:
         self.width = GRID_WIDTH
         self.height = GRID_HEIGHT
         self.grid = [[(0, None) for i in range(10)] for j in range(24)]
+        self.score = 0
         self.screen = screen
         self.center_block = None
         self.falling_blocks = [None, None, None, None]
@@ -343,6 +345,7 @@ class Grid:
         for i in range(line, 3, -1):
             for j in range(0, 10):
                 self.grid[i][j] = self.grid[i - 1][j]
+        self.score += 100
         
     def grid2pix(self, x, y):
         """ Converts (x, y) grid coordinates to (x, y) pixel coordinates. """
@@ -419,6 +422,14 @@ while not grid.done:
     # Draw the screen
     screen.fill(GRAY)
     pygame.draw.rect(screen, BLACK, [GRID_X, GRID_Y, GRID_WIDTH, GRID_HEIGHT])
+    pygame.draw.rect(screen, BLACK, [40, 90, 150, 75])
+
+    # Display score
+    font = pygame.font.SysFont("Lucida Console", 25, True, False)
+    text = font.render("Score:", True, WHITE)
+    screen.blit(text, [50, 100])
+    text = font.render(str(grid.score), True, WHITE)
+    screen.blit(text, [50, 130])
     
 
     # Draw the blocks
