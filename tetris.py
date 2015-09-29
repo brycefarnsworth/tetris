@@ -393,6 +393,10 @@ pygame.display.set_caption("Tetris")
 grid = Grid(screen)
 grid.gen_block()
 
+speed = 1000
+level = 1
+ticks = 0
+
 clock = pygame.time.Clock()
 
 while not grid.done:
@@ -400,6 +404,7 @@ while not grid.done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             grid.done = True
+        # We want these to happen only when the player presses the key
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_x:
                 grid.rotate_cw()
@@ -408,6 +413,7 @@ while not grid.done:
             if event.key == pygame.K_SPACE:
                 grid.drop()
 
+    # We want these to happen as long as the player holds the key down
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
         grid.move_left()
@@ -417,12 +423,17 @@ while not grid.done:
         grid.update()
 
     
-    grid.update()
+    if grid.score >= 500 * level:
+        level += 1
+    
+    if ticks >= speed - (level - 1) * 50:
+        grid.update()
+        ticks = 0
 
     # Draw the screen
     screen.fill(GRAY)
     pygame.draw.rect(screen, BLACK, [GRID_X, GRID_Y, GRID_WIDTH, GRID_HEIGHT])
-    pygame.draw.rect(screen, BLACK, [40, 90, 150, 75])
+    pygame.draw.rect(screen, BLACK, [40, 90, 150, 135])
 
     # Display score
     font = pygame.font.SysFont("Lucida Console", 25, True, False)
@@ -430,6 +441,10 @@ while not grid.done:
     screen.blit(text, [50, 100])
     text = font.render(str(grid.score), True, WHITE)
     screen.blit(text, [50, 130])
+    text = font.render("Level:", True, WHITE)
+    screen.blit(text, [50, 160])
+    text = font.render(str(level), True, WHITE)
+    screen.blit(text, [50, 190])
     
 
     # Draw the blocks
@@ -437,6 +452,7 @@ while not grid.done:
 
     pygame.display.flip()
     
-    clock.tick(10)
+    clock.tick(20)
+    ticks += clock.get_time()
 
 pygame.quit()
