@@ -397,6 +397,13 @@ while not grid.done:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             grid.done = True
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_x:
+                grid.rotate_cw()
+            if event.key == pygame.K_z:
+                grid.rotate_ccw()
+            if event.key == pygame.K_SPACE:
+                grid.drop()
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_LEFT]:
@@ -405,12 +412,6 @@ while not grid.done:
         grid.move_right()
     if keys[pygame.K_DOWN]:
         grid.update()
-    if keys[pygame.K_SPACE]:
-        grid.drop()
-    if keys[pygame.K_z]:
-        grid.rotate_ccw()
-    if keys[pygame.K_x]:
-        grid.rotate_cw()
 
     
     grid.update()
